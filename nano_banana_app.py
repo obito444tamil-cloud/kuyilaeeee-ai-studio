@@ -232,6 +232,7 @@ IMAGE_MODELS = [
 ]
 TEXT_MODELS = ["gemini-2.5-flash", "gemini-3.1-flash-lite"]
 AI_HORDE_ANONYMOUS_KEY = "0000000000"
+AI_HORDE_MAX_WAIT_SECONDS = 3600
 
 
 def get_configured_value(secret_name, *environment_names):
@@ -449,7 +450,9 @@ def generate_with_ai_horde(api_key, prompt, aspect_ratio=None):
     if not job_id:
         raise RuntimeError("AI Horde did not return a generation job ID.")
 
-    deadline = time.monotonic() + 180
+    started_at = time.monotonic()
+    deadline = started_at + 180
+    maximum_deadline = started_at + AI_HORDE_MAX_WAIT_SECONDS
     while time.monotonic() < deadline:
         status_response = requests.get(
             f"https://aihorde.net/api/v2/generate/status/{quote(job_id, safe='')}",
@@ -460,6 +463,10 @@ def generate_with_ai_horde(api_key, prompt, aspect_ratio=None):
         payload = status_response.json()
         if payload.get("faulted"):
             raise RuntimeError("AI Horde could not complete the generation.")
+        wait_time = payload.get("wait_time")
+        if isinstance(wait_time, (int, float)) and not isinstance(wait_time, bool):
+            estimated_deadline = started_at + max(180, wait_time + 300)
+            deadline = min(maximum_deadline, max(deadline, estimated_deadline))
         if payload.get("done"):
             generations = payload.get("generations") or []
             if not generations or not generations[0].get("img"):
@@ -474,7 +481,10 @@ def generate_with_ai_horde(api_key, prompt, aspect_ratio=None):
                 return image_from_api_response(image_response)
             return image_from_bytes(base64.b64decode(image_result))
         time.sleep(3)
-    raise TimeoutError("AI Horde image generation timed out. Try again or another provider.")
+    raise TimeoutError(
+        f"AI Horde job {job_id} is still queued after the maximum wait. "
+        "It may finish later; avoid retrying if you do not want a duplicate request."
+    )
 
 
 def generate_with_nvidia(api_key, prompt, aspect_ratio=None):

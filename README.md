@@ -11,7 +11,10 @@ anonymous access. AI Horde is an open-source, volunteer-powered image
 generation service; its documented anonymous key (`0000000000`) is shared and
 gets the lowest queue priority, so generation may be slow or temporarily
 unavailable. A personal AI Horde key is optional and can improve queue
-priority. See the [official anonymous usage notes](https://github.com/Haidra-Org/AI-Horde#anonymous-usage).
+priority. The app follows AI Horde's estimated wait plus a five-minute buffer,
+up to a one-hour limit; if a job exceeds that limit, it reports the job ID
+because the request may still finish later. See the [official anonymous usage
+notes](https://github.com/Haidra-Org/AI-Horde#anonymous-usage).
 
 Other providers are optional fallbacks and require their own provider-issued
 credentials. Their free quotas and trials can change. The app cannot inspect
