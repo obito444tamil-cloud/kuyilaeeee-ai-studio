@@ -345,6 +345,21 @@ class AppWorkflowTests(unittest.TestCase):
         self.assertTrue(expected_keys.issubset(visible_keys))
         self.assertFalse(app.exception)
 
+    def test_streamlit_secrets_load_provider_credentials(self):
+        secrets = {
+            "GEMINI_API_KEY": "secret-gemini-key",
+            "POLLINATIONS_API_KEY": "secret-pollinations-key",
+        }
+        with self.empty_provider_environment():
+            with patch("streamlit.secrets", secrets):
+                app = AppTest.from_file(str(APP_FILE)).run()
+
+        self.assertFalse(app.exception)
+        self.assertEqual(app.session_state["api_key"], "secret-gemini-key")
+        self.assertEqual(
+            app.session_state["pollinations_api_key"], "secret-pollinations-key"
+        )
+
     def test_style_preset_and_generated_image_can_be_edited(self):
         image_data = png_bytes()
         client = SimpleNamespace(
