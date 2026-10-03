@@ -38,8 +38,26 @@ credits only.
      can vary.
    - [NVIDIA NIM](https://build.nvidia.com/) — free API trial limits apply.
 
-   Keys entered in the app stay in the Streamlit session and are not written to
-   files. Never commit keys or paste them into chat.
+   For deployment, add keys in the Streamlit app's **Settings → Secrets**.
+   Local credentials can be entered in the sidebar or placed in
+   `.streamlit/secrets.toml` (keep that file out of version control). The app
+   reads Streamlit Secrets first, then environment variables, and displays
+   configured values only in password-masked fields.
+
+   Example Secrets configuration:
+
+   ```toml
+   GEMINI_API_KEY = "your-gemini-key"
+   POLLINATIONS_API_KEY = "your-pollinations-key"
+   HUGGINGFACE_API_KEY = "your-huggingface-token"
+   CLOUDFLARE_API_TOKEN = "your-cloudflare-token"
+   CLOUDFLARE_ACCOUNT_ID = "your-cloudflare-account-id"
+   AI_HORDE_API_KEY = "your-ai-horde-key"
+   NVIDIA_API_KEY = "your-nvidia-key"
+   ```
+
+   Replace only the values for providers you use. Never commit real keys or
+   paste them into chat.
 
 ## Run the tests
 
@@ -55,4 +73,5 @@ Push this folder to a GitHub repository, create an app at
 under the app's Secrets settings using the environment names above
 (`GEMINI_API_KEY`, `POLLINATIONS_API_KEY`, `HUGGINGFACE_API_KEY`,
 `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `AI_HORDE_API_KEY`, and
-`NVIDIA_API_KEY`). Do not commit API keys to the repository.
+`NVIDIA_API_KEY`). The app reads these directly from Streamlit Secrets. Do not
+commit API keys to the repository.
