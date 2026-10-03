@@ -11,6 +11,13 @@ configure payment, but cannot inspect provider account billing settings. Keep
 provider billing disabled and set any available API-key budgets to zero-cost
 credits only.
 
+## Live web page
+
+Open the deployed KUYILAEEEE!! studio at
+<https://kuyilaeeee-ai-studio-s8e5uwfhuog7zyoa2orpfn.streamlit.app/>.
+The web page is live; image generation, editing, and image analysis require
+provider credentials configured in the hosted app's Secrets settings.
+
 ## Run locally
 
 1. Install Python 3.10 or newer.
