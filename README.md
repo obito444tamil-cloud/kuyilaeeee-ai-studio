@@ -6,17 +6,25 @@ image directly into the editor for another iteration.
 
 Image generation tries the six configured providers in order: Gemini,
 Pollinations, Hugging Face, Cloudflare Workers AI, AI Horde, and NVIDIA NIM.
-Provider free quotas and trials are limited and can change. The app does not
-configure payment, but cannot inspect provider account billing settings. Keep
-provider billing disabled and set any available API-key budgets to zero-cost
-credits only.
+Text-to-image works without configuring a private API key through AI Horde's
+anonymous access. AI Horde is an open-source, volunteer-powered image
+generation service; its documented anonymous key (`0000000000`) is shared and
+gets the lowest queue priority, so generation may be slow or temporarily
+unavailable. A personal AI Horde key is optional and can improve queue
+priority. See the [official anonymous usage notes](https://github.com/Haidra-Org/AI-Horde#anonymous-usage).
+
+Other providers are optional fallbacks and require their own provider-issued
+credentials. Their free quotas and trials can change. The app cannot inspect
+provider account billing settings or prevent charges when billing is enabled;
+keep provider billing disabled or restrict keys to free credits.
 
 ## Live web page
 
 Open the deployed KUYILAEEEE!! studio at
 <https://kuyilaeeee-ai-studio-s8e5uwfhuog7zyoa2orpfn.streamlit.app/>.
-The web page is live; image generation, editing, and image analysis require
-provider credentials configured in the hosted app's Secrets settings.
+The web page is live. Text-to-image can use anonymous AI Horde access; image
+editing and image analysis require credentials for providers that support
+those features, configured in the hosted app's Secrets settings.
 
 ## Run locally
 
@@ -41,8 +49,8 @@ provider credentials configured in the hosted app's Secrets settings.
      receive a small monthly inference credit.
    - [Cloudflare Workers AI](https://dash.cloudflare.com/) — use a Workers Free
      account and supply its API token and account ID.
-   - [AI Horde](https://aihorde.net/register) — community-powered; queue times
-     can vary.
+   - [AI Horde](https://aihorde.net/) — works anonymously without registration;
+     create a personal key only if you want better queue priority.
    - [NVIDIA NIM](https://build.nvidia.com/) — free API trial limits apply.
 
    For deployment, add keys in the Streamlit app's **Settings → Secrets**.
@@ -59,7 +67,7 @@ provider credentials configured in the hosted app's Secrets settings.
    HUGGINGFACE_API_KEY = "your-huggingface-token"
    CLOUDFLARE_API_TOKEN = "your-cloudflare-token"
    CLOUDFLARE_ACCOUNT_ID = "your-cloudflare-account-id"
-   AI_HORDE_API_KEY = "your-ai-horde-key"
+   AI_HORDE_API_KEY = "your-optional-personal-ai-horde-key"
    NVIDIA_API_KEY = "your-nvidia-key"
    ```
 
@@ -80,5 +88,7 @@ Push this folder to a GitHub repository, create an app at
 under the app's Secrets settings using the environment names above
 (`GEMINI_API_KEY`, `POLLINATIONS_API_KEY`, `HUGGINGFACE_API_KEY`,
 `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `AI_HORDE_API_KEY`, and
-`NVIDIA_API_KEY`). The app reads these directly from Streamlit Secrets. Do not
-commit API keys to the repository.
+`NVIDIA_API_KEY`). AI_HORDE_API_KEY is optional; when empty, the app uses
+AI Horde's public anonymous access for text-to-image. The app reads other
+credentials directly from Streamlit Secrets. Do not commit private API keys
+to the repository.

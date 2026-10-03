@@ -231,6 +231,7 @@ IMAGE_MODELS = [
     "gemini-2.5-flash-image",
 ]
 TEXT_MODELS = ["gemini-2.5-flash", "gemini-3.1-flash-lite"]
+AI_HORDE_ANONYMOUS_KEY = "0000000000"
 
 
 def get_configured_value(secret_name, *environment_names):
@@ -264,15 +265,19 @@ def get_image_provider_keys():
     }
 
 
-def has_image_provider(keys):
+def has_image_provider(keys, image=None):
     return any(
         (
             keys["gemini_key"],
             keys["pollinations_key"],
-            keys["huggingface_key"],
             keys["cloudflare_token"] and keys["cloudflare_account_id"],
-            keys["ai_horde_key"],
-            keys["nvidia_key"],
+            image is None
+            and (
+                keys["huggingface_key"]
+                or keys["ai_horde_key"]
+                or keys["nvidia_key"]
+                or AI_HORDE_ANONYMOUS_KEY
+            ),
         )
     )
 
@@ -436,7 +441,6 @@ def generate_with_ai_horde(api_key, prompt, aspect_ratio=None):
                 "steps": 20,
                 "n": 1,
             },
-            "models": ["stable_diffusion"],
         },
         timeout=30,
     )
@@ -568,12 +572,13 @@ def generate_image(
                 ),
             )
         )
-    if ai_horde_key.strip() and image is None:
+    if image is None:
+        horde_key = ai_horde_key.strip() or AI_HORDE_ANONYMOUS_KEY
         providers.append(
             (
-                "AI Horde",
+                "AI Horde" if ai_horde_key.strip() else "AI Horde (anonymous)",
                 lambda: generate_with_ai_horde(
-                    ai_horde_key.strip(), prompt, aspect_ratio=aspect_ratio
+                    horde_key, prompt, aspect_ratio=aspect_ratio
                 ),
             )
         )
@@ -695,10 +700,10 @@ with st.sidebar:
             help="Find this in your Cloudflare dashboard.",
         )
         st.text_input(
-            "AI Horde API Key",
+            "AI Horde personal API Key (optional)",
             type="password",
             key="ai_horde_api_key",
-            help="Get a free key at https://aihorde.net/register. AI Horde is community-powered and may queue requests.",
+            help="Leave blank to use AI Horde's public anonymous key; anonymous requests are free but have the lowest queue priority. A personal key is optional.",
         )
         st.text_input(
             "NVIDIA NIM API Key",
@@ -708,7 +713,11 @@ with st.sidebar:
         )
         st.caption(
             "Fallback order: Gemini → Pollinations → Hugging Face → Cloudflare → "
-            "AI Horde → NVIDIA NIM."
+            "AI Horde anonymous → NVIDIA NIM."
+        )
+        st.caption(
+            "AI Horde is an open-source, community-powered service. Anonymous image "
+            "generation works without signup, but queue times depend on available volunteers."
         )
         st.caption(
             "Free quotas are limited. Disable billing or cap each key to free credits "
@@ -728,12 +737,14 @@ with st.sidebar:
         configured_providers.append("Cloudflare Workers AI")
     if image_keys["ai_horde_key"]:
         configured_providers.append("AI Horde")
+    else:
+        configured_providers.append("AI Horde (anonymous)")
     if image_keys["nvidia_key"]:
         configured_providers.append("NVIDIA NIM")
     if configured_providers:
         st.success("Image providers ready: " + " → ".join(configured_providers))
     else:
-        st.info("Add at least one image-provider API key to generate images.")
+        st.info("AI Horde anonymous image generation is available without an API key.")
     if image_keys["cloudflare_token"] and not image_keys["cloudflare_account_id"]:
         st.warning("Cloudflare Workers AI needs both its API token and account ID.")
 
@@ -761,7 +772,7 @@ with tab_gen:
     if st.button("🚀 Generate Image", type="primary", use_container_width=True):
         image_keys = get_image_provider_keys()
         if not has_image_provider(image_keys):
-            st.error("Add at least one provider key in the sidebar before generating.")
+            st.error("No text-to-image provider is available.")
         elif not prompt.strip():
             st.warning("Please enter a prompt.")
         else:
@@ -824,8 +835,12 @@ with tab_edit:
         )
         if st.button("✨ Apply Edit", type="primary", use_container_width=True):
             image_keys = get_image_provider_keys()
-            if not has_image_provider(image_keys):
-                st.error("Add at least one provider key in the sidebar before editing.")
+            if not has_image_provider(image_keys, image=src):
+                st.error(
+                    "Image editing requires Gemini, Pollinations, or Cloudflare "
+                    "credentials. AI Horde anonymous access supports image generation, "
+                    "not image editing."
+                )
             elif src is None:
                 st.warning("Please upload a valid image.")
             elif not instruction.strip():
