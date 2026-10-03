@@ -18,14 +18,21 @@ import streamlit as st
 from google import genai
 from google.genai import errors
 from PIL import Image, UnidentifiedImageError
+from streamlit.errors import StreamlitSecretNotFoundError
 
 st.set_page_config(page_title="KUYILAEEEE!!", page_icon="✨", layout="wide")
 st.markdown(
     """
     <style>
+    .block-container {
+        max-width: 1440px;
+        padding-top: 2rem;
+        padding-bottom: 3rem;
+    }
     .stApp {
         background:
-            radial-gradient(ellipse at 85% 0%, rgba(107, 76, 180, .18), transparent 38%),
+            radial-gradient(ellipse at 88% 3%, rgba(107, 76, 180, .22), transparent 36%),
+            radial-gradient(ellipse at 5% 35%, rgba(255, 181, 48, .07), transparent 32%),
             #0b0d16;
         color: #f2f0f8;
     }
@@ -34,11 +41,34 @@ st.markdown(
         border-right: 1px solid rgba(255, 255, 255, .08);
     }
     .hero {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 2rem;
         padding: 1.5rem 1.8rem;
         margin: .25rem 0 1.5rem;
         border: 1px solid rgba(255, 255, 255, .1);
         border-radius: 22px;
-        background: linear-gradient(115deg, rgba(255, 213, 74, .12), rgba(112, 76, 189, .2));
+        background:
+            radial-gradient(circle at 88% 50%, rgba(255, 213, 74, .14), transparent 18rem),
+            linear-gradient(115deg, rgba(255, 213, 74, .1), rgba(112, 76, 189, .23));
+        box-shadow: 0 24px 70px rgba(0, 0, 0, .18);
+    }
+    .hero-copy {
+        min-width: 0;
+    }
+    .hero-mark {
+        flex: 0 0 auto;
+        display: grid;
+        width: 6rem;
+        height: 6rem;
+        place-items: center;
+        border: 1px solid rgba(255, 255, 255, .16);
+        border-radius: 1.8rem;
+        background: rgba(255, 255, 255, .07);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1);
+        font-size: 3.3rem;
+        transform: rotate(6deg);
     }
     .hero-kicker {
         color: #ffd54a;
@@ -59,14 +89,57 @@ st.markdown(
         color: #c0bdcc;
         font-size: 1rem;
     }
+    .workflow-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: .85rem;
+        margin: 0 0 1.35rem;
+    }
+    .workflow-card {
+        display: flex;
+        align-items: flex-start;
+        gap: .8rem;
+        min-height: 5rem;
+        padding: 1rem 1.1rem;
+        border: 1px solid rgba(255, 255, 255, .09);
+        border-radius: 16px;
+        background: linear-gradient(140deg, rgba(255, 255, 255, .055), rgba(255, 255, 255, .025));
+    }
+    .workflow-number {
+        display: grid;
+        flex: 0 0 auto;
+        width: 2rem;
+        height: 2rem;
+        place-items: center;
+        border-radius: 10px;
+        background: rgba(255, 213, 74, .12);
+        color: #ffd54a;
+        font-size: .76rem;
+        font-weight: 800;
+    }
+    .workflow-card strong {
+        display: block;
+        color: #f4f0ff;
+        font-size: .92rem;
+    }
+    .workflow-card p {
+        margin: .2rem 0 0;
+        color: #aaa7b9;
+        font-size: .78rem;
+        line-height: 1.4;
+    }
     .stTabs [data-baseweb="tab-list"] {
         gap: .55rem;
         border-bottom: 1px solid rgba(255, 255, 255, .1);
+        padding-bottom: .2rem;
     }
     .stTabs [data-baseweb="tab"] {
         height: 3.25rem;
         padding: 0 1rem;
         border-radius: 12px 12px 0 0;
+    }
+    .stTabs [aria-selected="true"] {
+        background: rgba(255, 213, 74, .1);
     }
     .stButton > button[kind="primary"] {
         min-height: 3rem;
@@ -89,11 +162,49 @@ st.markdown(
     [data-testid="stFileUploader"] section {
         border-radius: 14px;
     }
+    [data-testid="stImage"] img {
+        border: 1px solid rgba(255, 255, 255, .1);
+        border-radius: 16px;
+    }
+    @media (max-width: 700px) {
+        .block-container {
+            padding-top: 1rem;
+        }
+        .hero {
+            padding: 1.2rem;
+        }
+        .hero-mark {
+            width: 4rem;
+            height: 4rem;
+            border-radius: 1.2rem;
+            font-size: 2.2rem;
+        }
+        .workflow-grid {
+            grid-template-columns: 1fr;
+        }
+    }
     </style>
     <div class="hero">
-      <div class="hero-kicker">Your creative AI workspace</div>
-      <h1>✨ KUYILAEEEE!!</h1>
-      <p>Dream it, edit it, understand it — with automatic AI image-provider fallback.</p>
+      <div class="hero-copy">
+        <div class="hero-kicker">YOUR CREATIVE AI WORKSPACE</div>
+        <h1>✨ KUYILAEEEE!!</h1>
+        <p>Dream it, refine it, and uncover what is inside your images.</p>
+      </div>
+      <div class="hero-mark" aria-hidden="true">🍌</div>
+    </div>
+    <div class="workflow-grid">
+      <div class="workflow-card">
+        <span class="workflow-number">01</span>
+        <div><strong>Create</strong><p>Turn a clear idea into an original image.</p></div>
+      </div>
+      <div class="workflow-card">
+        <span class="workflow-number">02</span>
+        <div><strong>Refine</strong><p>Upload or keep iterating on your latest image.</p></div>
+      </div>
+      <div class="workflow-card">
+        <span class="workflow-number">03</span>
+        <div><strong>Understand</strong><p>Extract text, summaries, and visual answers.</p></div>
+      </div>
     </div>
     """,
     unsafe_allow_html=True,
@@ -106,6 +217,20 @@ IMAGE_MODELS = [
     "gemini-2.5-flash-image",
 ]
 TEXT_MODELS = ["gemini-2.5-flash", "gemini-3.1-flash-lite"]
+
+
+def get_configured_value(secret_name, *environment_names):
+    try:
+        value = st.secrets.get(secret_name)
+    except StreamlitSecretNotFoundError:
+        value = None
+    if value is not None and str(value).strip():
+        return str(value).strip()
+    for name in environment_names or (secret_name,):
+        value = os.environ.get(name, "").strip()
+        if value:
+            return value
+    return ""
 
 
 def get_client():
@@ -508,18 +633,19 @@ def show_api_error(operation, exc):
         st.error(f"{operation} failed: Gemini API error ({exc.code} {exc.status}): {exc.message}")
 
 
-for session_key, environment_key in (
-    ("api_key", "GEMINI_API_KEY"),
-    ("pollinations_api_key", "POLLINATIONS_API_KEY"),
-    ("huggingface_api_key", "HUGGINGFACE_API_KEY"),
-    ("cloudflare_api_token", "CLOUDFLARE_API_TOKEN"),
-    ("cloudflare_account_id", "CLOUDFLARE_ACCOUNT_ID"),
-    ("ai_horde_api_key", "AI_HORDE_API_KEY"),
-    ("nvidia_api_key", "NVIDIA_API_KEY"),
+for session_key, secret_name, environment_aliases in (
+    ("api_key", "GEMINI_API_KEY", ("GOOGLE_API_KEY",)),
+    ("pollinations_api_key", "POLLINATIONS_API_KEY", ()),
+    ("huggingface_api_key", "HUGGINGFACE_API_KEY", ()),
+    ("cloudflare_api_token", "CLOUDFLARE_API_TOKEN", ()),
+    ("cloudflare_account_id", "CLOUDFLARE_ACCOUNT_ID", ()),
+    ("ai_horde_api_key", "AI_HORDE_API_KEY", ()),
+    ("nvidia_api_key", "NVIDIA_API_KEY", ()),
 ):
-    st.session_state.setdefault(session_key, os.environ.get(environment_key, ""))
-if not st.session_state["api_key"]:
-    st.session_state["api_key"] = os.environ.get("GOOGLE_API_KEY", "")
+    st.session_state.setdefault(
+        session_key,
+        get_configured_value(secret_name, *environment_aliases),
+    )
 
 with st.sidebar:
     st.markdown("## ✨ Studio settings")
