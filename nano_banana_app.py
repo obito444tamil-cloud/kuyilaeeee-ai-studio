@@ -156,8 +156,22 @@ st.markdown(
         box-shadow: 0 8px 28px rgba(255, 190, 44, .18);
     }
     [data-testid="stTextArea"] textarea,
-    [data-testid="stTextInput"] input {
+    [data-testid="stTextInput"] input,
+    [data-baseweb="select"] > div {
         border-radius: 12px;
+        border-color: rgba(255, 255, 255, .14);
+        background-color: #151724;
+        color: #f2f0f8;
+    }
+    [data-testid="stTextArea"] textarea::placeholder,
+    [data-testid="stTextInput"] input::placeholder {
+        color: #9996a9;
+    }
+    [data-testid="stTextArea"] textarea:focus,
+    [data-testid="stTextInput"] input:focus,
+    [data-baseweb="select"] > div:focus-within {
+        border-color: rgba(255, 213, 74, .75);
+        box-shadow: 0 0 0 1px rgba(255, 213, 74, .35);
     }
     [data-testid="stFileUploader"] section {
         border-radius: 14px;
